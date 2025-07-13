@@ -25,4 +25,5 @@ model workflow{
 //User cannot have the two workflows with the same name
 
 @@unique([name,userId])
+ @@unique([id, userId])
 }

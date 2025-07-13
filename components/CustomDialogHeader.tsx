@@ -2,11 +2,14 @@
 
 import React from 'react'
 import {DialogHeader,DialogTitle} from "@/components/ui/dialog"
+import {Icon,LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Separator } from '@radix-ui/react-separator'
 
 interface Props{
     title?:string
     subTitle?:string
-    icon?:string
+    icon?:LucideIcon
 
     iconClassName?:string
     titleClassName?:string
@@ -15,10 +18,20 @@ interface Props{
 
 
 const CustomDialogHeader = (props:Props) => {
+  const Icon =props.icon
   return (
-    <div>
-      CustomDialogHeader
-    </div>
+    <DialogHeader className='py-6'>
+      <DialogTitle asChild>
+      <div className="flex flex-col items-center gap-2 mb-2">
+        {Icon && <Icon size={30} className={cn("stroke-primary", props.iconClassName)}/>}
+        {props.title && (<p className={cn("text-xl text-primary", props.titleClassName)}>
+          {props.title}
+        </p>)}
+        {props.subTitle && (<p className={cn("text-sm text-muted-foreground ",props.subtitleClassName)}>{props.subTitle}</p>)}
+      </div>
+      </DialogTitle>
+      <Separator/>
+    </DialogHeader>
   )
 }
 
