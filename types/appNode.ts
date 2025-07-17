@@ -1,5 +1,5 @@
 import { Node } from "@xyflow/react";
-import { TaskType } from "./task";
+import { TaskParam, TaskType } from "./task";
 
 export interface ScrapeNodeData{
     type: TaskType;
@@ -9,4 +9,11 @@ export interface ScrapeNodeData{
 export interface ScrapeNode extends Node{
  data: ScrapeNodeData
 
+}
+
+export interface ParamProps{
+    param:TaskParam
+    value:string
+    updateNodeParamValue: (newValue:string)=>void
+    disabled?:boolean
 }
