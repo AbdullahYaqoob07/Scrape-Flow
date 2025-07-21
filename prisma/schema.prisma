@@ -22,8 +22,43 @@ model workflow{
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  execution WorkflowExecution[]
+
 //User cannot have the two workflows with the same name
 
 @@unique([name,userId])
  @@unique([id, userId])
+}
+
+model WorkflowExecution {
+  id String @id @default(cuid())
+  workflowId String
+  userId String
+  trigger String
+  status String
+  createdAt DateTime @default(now())
+  startedAt DateTime?
+  completedAt DateTime?
+
+  workflow workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  phases ExecutionPhase[] @relation("WorkflowToPhases") // 🟢 name the relation
+}
+
+model ExecutionPhase {
+  id String @id @default(cuid())
+  userId String
+  status String
+  number Int
+  node String
+  name String
+  startedAt DateTime?
+  completedAt DateTime?
+  inputs String?
+  outputs String?
+
+  creditsCost Int?
+
+  workflowExcutionId String
+  execution WorkflowExecution @relation("WorkflowToPhases", fields: [workflowExcutionId], references: [id], onDelete: Cascade) // 🟢 same name here
 }

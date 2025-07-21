@@ -1,13 +1,24 @@
-import { ScrapeNode } from "@/types/appNode";
+import { ScrapeNode, ScrapeNodeMissingInputs } from "@/types/appNode";
 import {
   WorkflowExecutionPlan,
   WorkflowExecutionPlanPhase,
 } from "@/types/workflow";
-import { Edge, getIncomers } from "@xyflow/react";
+import { Edge,  } from "@xyflow/react";
 import { TaskRegistry } from "./task/registry";
+
+
+
+export enum FlowToExecutionPlanValidationError{
+    "NO_ENTRY_POINT",
+    "INVALID_INPUTS"
+}
 
 type FlowToExecutionPlanType = {
   executionPlan: WorkflowExecutionPlan;
+  error?: {
+    type: FlowToExecutionPlanValidationError
+    invalidElements?: ScrapeNodeMissingInputs[]
+  }
 };
 
 export function FlowToExecutionPlan(
@@ -18,11 +29,25 @@ export function FlowToExecutionPlan(
     (node) => TaskRegistry[node.data.type].isEntryPoint
   );
   if (!entryPoint) {
-    throw new Error("Entry point not found");
+return {
+  error: {
+    type: FlowToExecutionPlanValidationError.NO_ENTRY_POINT
+  },
+  executionPlan: []
+}
   }
+const inputswithErrors:ScrapeNodeMissingInputs[]=[]
 
   const planned = new Set<string>();
+const invalidInputs= getInvalidInputs(entryPoint,edges,planned)
 
+if(invalidInputs.length>0)
+{
+    inputswithErrors.push({
+        nodeId: entryPoint.id,
+        inputs:invalidInputs
+    })
+}
   const executionPlan: WorkflowExecutionPlan = [
     {
       phase: 1,
@@ -49,7 +74,11 @@ export function FlowToExecutionPlan(
           //this means that this particular node has invalid input
           //which means that the workflow is invalid
           console.error("invalid inputs", currentNode.id, invalidInputs);
-          throw new Error("TODO: handle error 1");
+          inputswithErrors.push({
+        nodeId: currentNode.id,
+        inputs:invalidInputs
+    })
+            
         } else {
           continue;
         }
@@ -62,6 +91,16 @@ export function FlowToExecutionPlan(
         planned.add(node.id)
     }
     executionPlan.push(nextPhase)
+  }
+  if(inputswithErrors.length>0)
+  {
+    return {
+    error: {
+        type: FlowToExecutionPlanValidationError.INVALID_INPUTS,
+        invalidElements: inputswithErrors
+    },
+    executionPlan: []
+}
   }
 
   return { executionPlan };
@@ -111,4 +150,19 @@ function getInvalidInputs(
   }
   return invalidInputs
  
+}
+
+function getIncomers(node:ScrapeNode,nodes:ScrapeNode[],edges:Edge[]){
+    if(!node.id){
+        return[]
+    }
+
+    const incomerIds=new Set()
+    edges.forEach(edge=>{
+        if(edge.target===node.id)
+        {
+            incomerIds.add(edge.source)
+        }
+    })
+    return nodes.filter(n=>incomerIds.has(n.id))
 }
